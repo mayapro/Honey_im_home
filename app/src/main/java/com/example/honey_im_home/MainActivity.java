@@ -48,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
     Button click_me;
     Button clear_home;
     Button set_home_loct;
-//    Button day_or_night;
 
     boolean stop_tracking;
     private LocationRequest locationRequest;
