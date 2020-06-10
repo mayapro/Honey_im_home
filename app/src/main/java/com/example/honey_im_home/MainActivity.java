@@ -67,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
         click_me = findViewById(R.id.click_me);
         clear_home = findViewById(R.id.clear_home);
         set_home_loct = findViewById(R.id.set_location_at_home);
-//        day_or_night = findViewById(R.id.test_day);
 
         earthImg = findViewById(R.id.earthImg);
         homeImg = findViewById(R.id.closeH);
