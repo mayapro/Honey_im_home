@@ -24,7 +24,7 @@
         android:id = "@+id/locationLatitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="location"
+        android:text=""
         android:textSize="20sp"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp" />
@@ -34,7 +34,7 @@
         android:id = "@+id/locationLongitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="location"
+        android:text=""
         android:textSize="20sp"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/locationLatitude" />
@@ -43,7 +43,7 @@
         android:id = "@+id/locationAccuracy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="location"
+        android:text=""
         android:textSize="20sp"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/locationLongitude"/>
@@ -74,6 +74,16 @@
         android:layout_centerHorizontal="true"
         android:layout_below="@id/home_lat_and_long"
         android:src="@drawable/close1" />
+
+<!--    <Button-->
+<!--        android:id="@+id/test_day"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_centerHorizontal="true"-->
+<!--        android:background = "#003C3F41"-->
+<!--        android:layout_above="@id/set_location_at_home"-->
+<!--        android:textSize="15sp"-->
+<!--        android:text="day or night" />-->
 
     <Button
         android:id="@+id/set_location_at_home"

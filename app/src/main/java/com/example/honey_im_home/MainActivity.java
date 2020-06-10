@@ -16,9 +16,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.Log;
-import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -28,13 +26,10 @@ import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Toast;
 
-//import com.google.android.gms.instantapps.ActivityCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.Calendar;
@@ -53,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     Button click_me;
     Button clear_home;
     Button set_home_loct;
+//    Button day_or_night;
 
     boolean stop_tracking;
     private LocationRequest locationRequest;
@@ -61,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient client;
 
     private SharedPreferences sp;
-
 
     @SuppressLint("RestrictedApi")
     @Override
@@ -72,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         click_me = findViewById(R.id.click_me);
         clear_home = findViewById(R.id.clear_home);
         set_home_loct = findViewById(R.id.set_location_at_home);
+//        day_or_night = findViewById(R.id.test_day);
 
         earthImg = findViewById(R.id.earthImg);
         homeImg = findViewById(R.id.closeH);
@@ -93,27 +89,12 @@ public class MainActivity extends AppCompatActivity {
 
         if (savedInstanceState != null)
         {
-
             stop_tracking = savedInstanceState.getBoolean("stop_tracking");
             myLocation = (Location) savedInstanceState.getParcelable("myLocation");
 
-            if (stop_tracking)
-            {
-                click_me.setText("stop tracking");
-                if (myLocation != null)
-                {
-                    mySetLocation(myLocation);
-                }
-                set_home_loct.setVisibility(View.INVISIBLE);
-            }
-            else
-            {
-                click_me.setText("start_tracking_location");
-                location_1.setText("stopped tracking");
-                location_2.setText(" ");
-                location_3.setText(" ");
+            stop_tracking = !stop_tracking;
 
-            }
+            locateFunc ();
 
         }
 
@@ -206,50 +187,52 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void startClient()
+    {
+        client = new FusedLocationProviderClient(this);
+        locationRequest = new LocationRequest();
+
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setFastestInterval(2000);
+        locationRequest.setInterval(4000);
+
+        client.requestLocationUpdates(locationRequest, new LocationCallback(){
+            @Override
+            public void onLocationResult(LocationResult locationResult)
+            {
+                super.onLocationResult(locationResult);
+                rotateAnimation();      // rotate the earth img
+
+                locationCallback = this;
+            }
+        }, getMainLooper());
+    }
 
 
     private void locateFunc ()
     {
         if (!stop_tracking){
+            startClient();
 
-            client = new FusedLocationProviderClient(this);
-            locationRequest = new LocationRequest();
-
-            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            locationRequest.setFastestInterval(2000);
-            locationRequest.setInterval(4000);
-
-            client.requestLocationUpdates(locationRequest, new LocationCallback(){
+            client.getLastLocation().addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
                 @Override
-                public void onLocationResult(LocationResult locationResult)
-                {
-                    super.onLocationResult(locationResult);
-                    rotateAnimation();      // rotate the earth img
+                public void onSuccess(Location location) {
 
-                    locationCallback = this;
-
-
-                    client.getLastLocation().addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-
-                            if (location != null)
-                            {
-                                myLocation = location;
-                                mySetLocation(myLocation);
-                                if (Double.parseDouble(String.valueOf(location.getAccuracy())) < 50 )
-                                {
-                                    set_home_loct.setVisibility(View.VISIBLE);
-                                }
-                                else
-                                {
-                                    set_home_loct.setVisibility(View.INVISIBLE);
-                                }
-                            }
+                    if (location != null)
+                    {
+                        myLocation = location;
+                        mySetLocation(myLocation);
+                        if (Double.parseDouble(String.valueOf(location.getAccuracy())) < 50 )
+                        {
+                            set_home_loct.setVisibility(View.VISIBLE);
                         }
-                    });
+                        else
+                        {
+                            set_home_loct.setVisibility(View.INVISIBLE);
+                        }
+                    }
                 }
-            }, getMainLooper());
+            });
 
             click_me.setText("stop tracking");
             stop_tracking = true;
@@ -280,8 +263,6 @@ public class MainActivity extends AppCompatActivity {
         location_1.setText(lat);
         location_2.setText(lon);
         location_3.setText(acc);
-
-//        saveHome(acc,lat,lon);
     }
 
     private void saveHome(Location location)
