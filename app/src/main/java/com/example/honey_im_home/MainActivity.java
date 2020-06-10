@@ -13,6 +13,7 @@ import android.annotation.SuppressLint;
 
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
     boolean stop_tracking;
     private LocationRequest locationRequest;
+    private Location myLocation;
     private LocationCallback locationCallback;
     private FusedLocationProviderClient client;
 
@@ -87,60 +89,36 @@ public class MainActivity extends AppCompatActivity {
 
         set_home_loct.setVisibility(View.INVISIBLE);
 
-        click_me.setOnClickListener(new View.OnClickListener()
+        createButtons();
+
+        if (savedInstanceState != null)
         {
-            @Override
-            public void onClick(View v)
+
+            stop_tracking = savedInstanceState.getBoolean("stop_tracking");
+            myLocation = (Location) savedInstanceState.getParcelable("myLocation");
+
+            if (stop_tracking)
             {
-
-                if (ContextCompat.checkSelfPermission
-                        (MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                        PermissionChecker.PERMISSION_GRANTED)
+                click_me.setText("stop tracking");
+                if (myLocation != null)
                 {
-
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                            STORAGE_PERMISSION_CODE);
+                    mySetLocation(myLocation);
                 }
-
-//                if (stop_tracking)
-                locateFunc();  // if we can locate - we start
+                set_home_loct.setVisibility(View.INVISIBLE);
             }
-        });
+            else
+            {
+                click_me.setText("start_tracking_location");
+                location_1.setText("stopped tracking");
+                location_2.setText(" ");
+                location_3.setText(" ");
 
-        set_home_loct.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v) {
-                loadHomeLock();
-                homeImg.setImageResource((R.drawable.open1));   // light up the house
             }
-        });
 
-        clear_home.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                SharedPreferences sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
-                SharedPreferences.Editor editor = sp.edit();
-                editor.clear();
-                editor.apply();
-
-                hone_Title.setText("");
-                home_location.setText("");
-                clear_home.setVisibility(View.INVISIBLE);
-
-                homeImg.setImageResource((R.drawable.close1));   // light up the house
-            }
-        });
+        }
 
     }
 
-//    // is it neccery?
-//    @Override
-//    public void onDestroy() {
-//        super.onDestroy();
-//        client.removeLocationUpdates(locationCallback);
-//    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -159,77 +137,87 @@ public class MainActivity extends AppCompatActivity {
         sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
         String lat_sp = sp.getString("latitude", null);
         String long_sp = sp.getString("longitude", null);
+        String accuracy = sp.getString("accuracy", null);
+
         if (lat_sp != null && long_sp != null)
         {
             hone_Title.setText("home location");
             String temp = "<" + lat_sp + "," + long_sp + ">";
             home_location.setText(temp);
 
+            homeImg.setImageResource((R.drawable.open1));   // light up the house
             clear_home.setVisibility(View.VISIBLE);
         }
         else
         {
             hone_Title.setText("");
             home_location.setText("");
+            clear_home.setVisibility(View.INVISIBLE);
         }
     }
 
 
-    private void saveHome(String acc, final String lat, final String lon)
+    private void createButtons ()
     {
-        if (Double.parseDouble(acc) < 50 )
+        click_me.setOnClickListener(new View.OnClickListener()
         {
-            set_home_loct.setVisibility(View.VISIBLE);
+            @Override
+            public void onClick(View v)
+            {
 
-            SharedPreferences sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
-            SharedPreferences.Editor editor = sp.edit();
-            editor.clear();
-            editor.putString("latitude", lat);
-            editor.putString("longitude", lon);
-            editor.apply();
+                if (ContextCompat.checkSelfPermission
+                        (MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                        PermissionChecker.PERMISSION_GRANTED)
+                {
 
-        }
-        else
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            STORAGE_PERMISSION_CODE);
+                }
+                locateFunc();  // if we can locate - we start
+            }
+        });
+
+        set_home_loct.setOnClickListener(new View.OnClickListener()
         {
-            set_home_loct.setVisibility(View.INVISIBLE);
-        }
+            @Override
+            public void onClick(View v) {
+                saveHome(myLocation);
+                loadHomeLock();
+                homeImg.setImageResource((R.drawable.open1));   // light up the house
+            }
+        });
 
+        clear_home.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
+                SharedPreferences.Editor editor = sp.edit();
+                editor.clear();
+                editor.apply();
+
+                hone_Title.setText("");
+                home_location.setText("");
+
+                clear_home.setVisibility(View.INVISIBLE);
+
+                homeImg.setImageResource((R.drawable.close1));   // light up the house
+            }
+        });
     }
+
 
 
     private void locateFunc ()
     {
-//        distanceBetween(double startLatitude, double startLongitude, double endLatitude, double endLongitude, float[] results)
         if (!stop_tracking){
 
             client = new FusedLocationProviderClient(this);
             locationRequest = new LocationRequest();
-//            locationCallback = new LocationCallback();
 
             locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             locationRequest.setFastestInterval(2000);
             locationRequest.setInterval(4000);
-
-//            client.requestLocationUpdates(locationRequest, locationCallback,getMainLooper());
-//
-//            client.getLastLocation().addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
-//                @Override
-//                public void onSuccess(Location location) {
-//
-//                    if (location != null && stop_tracking)
-//                    {
-//                        String lat = String.valueOf(location.getLatitude());
-//                        String lon = String.valueOf(location.getLongitude());
-////                                Log.d("location accu  ", String.valueOf(location.getAccuracy()));
-//                        String acc = String.valueOf(location.getAccuracy());
-//                        location_1.setText(lat);
-//                        location_2.setText(lon);
-//                        location_3.setText(acc);
-//
-//                        saveHome(acc,lat,lon);
-//                    }
-//                }
-//            });
 
             client.requestLocationUpdates(locationRequest, new LocationCallback(){
                 @Override
@@ -247,15 +235,16 @@ public class MainActivity extends AppCompatActivity {
 
                             if (location != null)
                             {
-                                String lat = String.valueOf(location.getLatitude());
-                                String lon = String.valueOf(location.getLongitude());
-//                                Log.d("location accu  ", String.valueOf(location.getAccuracy()));
-                                String acc = String.valueOf(location.getAccuracy());
-                                location_1.setText(lat);
-                                location_2.setText(lon);
-                                location_3.setText(acc);
-
-                                saveHome(acc,lat,lon);
+                                myLocation = location;
+                                mySetLocation(myLocation);
+                                if (Double.parseDouble(String.valueOf(location.getAccuracy())) < 50 )
+                                {
+                                    set_home_loct.setVisibility(View.VISIBLE);
+                                }
+                                else
+                                {
+                                    set_home_loct.setVisibility(View.INVISIBLE);
+                                }
                             }
                         }
                     });
@@ -270,11 +259,10 @@ public class MainActivity extends AppCompatActivity {
         {
             if (locationCallback != null)
             {
-                Log.d("LALALALA", "YOU FAILED");
                 client.removeLocationUpdates(locationCallback);
             }
-
             click_me.setText("start_tracking_location");
+            set_home_loct.setVisibility(View.INVISIBLE);
             location_1.setText("stopped tracking");
             location_2.setText(" ");
             location_3.setText(" ");
@@ -282,6 +270,39 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+
+    private void mySetLocation(Location location)
+    {
+        String lat = String.valueOf(location.getLatitude());
+        String lon = String.valueOf(location.getLongitude());
+        String acc = String.valueOf(location.getAccuracy());
+        location_1.setText(lat);
+        location_2.setText(lon);
+        location_3.setText(acc);
+
+//        saveHome(acc,lat,lon);
+    }
+
+    private void saveHome(Location location)
+    {
+        String lat = String.valueOf(location.getLatitude());
+        String lon = String.valueOf(location.getLongitude());
+        String acc = String.valueOf(location.getAccuracy());
+        location_1.setText(lat);
+        location_2.setText(lon);
+        location_3.setText(acc);
+
+        sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.clear();
+        editor.putString("latitude", lat);
+        editor.putString("longitude", lon);
+        editor.putString("accuracy", acc);
+        editor.apply();
+    }
+
+
 
     public void rotateAnimation ()
     {
@@ -292,13 +313,32 @@ public class MainActivity extends AppCompatActivity {
     public void isItNight()
     {
         Calendar cc = Calendar.getInstance();
-
         int mHour = cc.get(Calendar.HOUR_OF_DAY);
 
         if (mHour > 18 || mHour < 5)  // if its night time the background img should be night
         {
             View my_back = findViewById(R.id.background);
             my_back.setBackgroundResource(R.drawable.night1);
+
+            click_me.setTextColor(Color.WHITE);
+            clear_home.setTextColor(Color.WHITE);
+            set_home_loct.setTextColor(Color.WHITE);
+
+            location_1.setTextColor(Color.WHITE);
+            location_2.setTextColor(Color.WHITE);
+            location_3.setTextColor(Color.WHITE);
+
+            hone_Title.setTextColor(Color.WHITE);
+            home_location.setTextColor(Color.WHITE);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putParcelable("myLocation", myLocation);
+        outState.putBoolean("stop_tracking", stop_tracking);
+
     }
 }
