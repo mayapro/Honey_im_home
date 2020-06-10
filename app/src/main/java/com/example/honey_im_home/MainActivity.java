@@ -103,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                             STORAGE_PERMISSION_CODE);
                 }
 
+//                if (stop_tracking)
                 locateFunc();  // if we can locate - we start
             }
         });
@@ -200,8 +201,6 @@ public class MainActivity extends AppCompatActivity {
     {
 //        distanceBetween(double startLatitude, double startLongitude, double endLatitude, double endLongitude, float[] results)
         if (!stop_tracking){
-            click_me.setText("stop tracking");
-            stop_tracking = true;
 
             client = new FusedLocationProviderClient(this);
             locationRequest = new LocationRequest();
@@ -211,6 +210,27 @@ public class MainActivity extends AppCompatActivity {
             locationRequest.setFastestInterval(2000);
             locationRequest.setInterval(4000);
 
+//            client.requestLocationUpdates(locationRequest, locationCallback,getMainLooper());
+//
+//            client.getLastLocation().addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
+//                @Override
+//                public void onSuccess(Location location) {
+//
+//                    if (location != null && stop_tracking)
+//                    {
+//                        String lat = String.valueOf(location.getLatitude());
+//                        String lon = String.valueOf(location.getLongitude());
+////                                Log.d("location accu  ", String.valueOf(location.getAccuracy()));
+//                        String acc = String.valueOf(location.getAccuracy());
+//                        location_1.setText(lat);
+//                        location_2.setText(lon);
+//                        location_3.setText(acc);
+//
+//                        saveHome(acc,lat,lon);
+//                    }
+//                }
+//            });
+
             client.requestLocationUpdates(locationRequest, new LocationCallback(){
                 @Override
                 public void onLocationResult(LocationResult locationResult)
@@ -218,11 +238,14 @@ public class MainActivity extends AppCompatActivity {
                     super.onLocationResult(locationResult);
                     rotateAnimation();      // rotate the earth img
 
+                    locationCallback = this;
+
+
                     client.getLastLocation().addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
 
-                            if (location != null && stop_tracking)
+                            if (location != null)
                             {
                                 String lat = String.valueOf(location.getLatitude());
                                 String lon = String.valueOf(location.getLongitude());
@@ -239,10 +262,17 @@ public class MainActivity extends AppCompatActivity {
                 }
             }, getMainLooper());
 
+            click_me.setText("stop tracking");
+            stop_tracking = true;
+
         }
         else if (stop_tracking)
         {
-//            client.removeLocationUpdates(locationCallback);
+            if (locationCallback != null)
+            {
+                Log.d("LALALALA", "YOU FAILED");
+                client.removeLocationUpdates(locationCallback);
+            }
 
             click_me.setText("start_tracking_location");
             location_1.setText("stopped tracking");
