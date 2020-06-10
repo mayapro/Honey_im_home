@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:background = "@drawable/day3"
+    android:id="@+id/background"
+
+    >
+
+    <ImageView
+        android:id="@+id/earthImg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/earth1"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/home_lat_and_long"
+        android:layout_marginTop="45dp"
+        />
+
+    <TextView
+        android:id = "@+id/locationLatitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="location"
+        android:textSize="20sp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp" />
+
+
+    <TextView
+        android:id = "@+id/locationLongitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="location"
+        android:textSize="20sp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/locationLatitude" />
+
+    <TextView
+        android:id = "@+id/locationAccuracy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="location"
+        android:textSize="20sp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/locationLongitude"/>
+
+    <TextView
+        android:id = "@+id/home_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="your home location"
+        android:textSize="20sp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/locationAccuracy"/>
+
+    <TextView
+        android:id = "@+id/home_lat_and_long"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="home location"
+        android:textSize="20sp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/home_location"/>
+
+
+    <ImageView
+        android:id="@+id/closeH"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/home_lat_and_long"
+        android:src="@drawable/close1" />
+
+    <Button
+        android:id="@+id/set_location_at_home"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:background = "#003C3F41"
+        android:layout_above="@id/click_me"
+        android:textSize="15sp"
+        android:text="set location at home" />
+
+    <Button
+        android:id="@+id/click_me"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:background = "#003C3F41"
+        android:layout_above="@id/clear_home"
+        android:textSize="15sp"
+        android:text="@string/start_tracking_location" />
+
+    <Button
+        android:id="@+id/clear_home"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:background = "#003C3F41"
+        android:textSize="15sp"
+        android:text="clear home" />
+
+</RelativeLayout>
