@@ -31,7 +31,11 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+
+import java.lang.reflect.Type;
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
@@ -54,6 +58,9 @@ public class MainActivity extends AppCompatActivity {
     private Location myLocation;
     private LocationCallback locationCallback;
     private FusedLocationProviderClient client;
+
+    private LocationInfo myLocationData;
+
 
     private SharedPreferences sp;
 
@@ -78,7 +85,15 @@ public class MainActivity extends AppCompatActivity {
 
         stop_tracking = false;
 
-        loadHomeLock();
+        myLocationData = new LocationInfo();
+
+        if (myLocationData != null)
+        {
+            loadHomeLock();
+        }
+
+        Log.d("why", "lalalalaaaaaaaaa");
+
         isItNight();
 
         set_home_loct.setVisibility(View.INVISIBLE);
@@ -111,29 +126,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void loadHomeLock ()
-    {
-        sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
-        String lat_sp = sp.getString("latitude", null);
-        String long_sp = sp.getString("longitude", null);
-        String accuracy = sp.getString("accuracy", null);
 
-        if (lat_sp != null && long_sp != null)
-        {
-            hone_Title.setText("home location");
-            String temp = "<" + lat_sp + "," + long_sp + ">";
-            home_location.setText(temp);
-
-            homeImg.setImageResource((R.drawable.open1));   // light up the house
-            clear_home.setVisibility(View.VISIBLE);
-        }
-        else
-        {
-            hone_Title.setText("");
-            home_location.setText("");
-            clear_home.setVisibility(View.INVISIBLE);
-        }
-    }
 
 
     private void createButtons ()
@@ -202,6 +195,31 @@ public class MainActivity extends AppCompatActivity {
                 rotateAnimation();      // rotate the earth img
 
                 locationCallback = this;
+
+                client.getLastLocation().addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+
+                        if (location != null)
+                        {
+                            myLocation = location;
+
+                            myLocationData.newLocationInfo(myLocation.getLatitude(),   // todo
+                                    myLocation.getLongitude(),myLocation.getAccuracy());
+
+                            mySetLocation(myLocation);
+                            if (Double.parseDouble(String.valueOf(location.getAccuracy())) < 50 )
+                            {
+                                set_home_loct.setVisibility(View.VISIBLE);
+                            }
+                            else
+                            {
+                                set_home_loct.setVisibility(View.INVISIBLE);
+                            }
+                        }
+                    }
+                });
+
             }
         }, getMainLooper());
     }
@@ -211,26 +229,6 @@ public class MainActivity extends AppCompatActivity {
     {
         if (!stop_tracking){
             startClient();
-
-            client.getLastLocation().addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
-                @Override
-                public void onSuccess(Location location) {
-
-                    if (location != null)
-                    {
-                        myLocation = location;
-                        mySetLocation(myLocation);
-                        if (Double.parseDouble(String.valueOf(location.getAccuracy())) < 50 )
-                        {
-                            set_home_loct.setVisibility(View.VISIBLE);
-                        }
-                        else
-                        {
-                            set_home_loct.setVisibility(View.INVISIBLE);
-                        }
-                    }
-                }
-            });
 
             click_me.setText("stop tracking");
             stop_tracking = true;
@@ -275,12 +273,49 @@ public class MainActivity extends AppCompatActivity {
         sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
         editor.clear();
-        editor.putString("latitude", lat);
-        editor.putString("longitude", lon);
-        editor.putString("accuracy", acc);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(myLocationData);
+        editor.putString("location data", json);
         editor.apply();
+
     }
 
+
+    private void loadHomeLock ()
+    {
+        sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
+
+        Gson gson = new Gson();
+        String json = sp.getString("location data", "");
+        Type type = new TypeToken<LocationInfo>() {}.getType();
+        LocationInfo tempLoc = (LocationInfo) gson.fromJson(json, type);
+
+
+        if (tempLoc != null)
+        {
+            myLocationData = tempLoc;
+            Log.d("why", String.valueOf(myLocationData));
+
+            String lat_sp = String.valueOf(myLocationData.getLatitude());
+            String long_sp = String.valueOf(myLocationData.getLangitude());
+            String accuracy = String.valueOf(myLocationData.getAccuracy());
+
+
+            hone_Title.setText("home location");
+            String temp = "<" + lat_sp + "," + long_sp + ">";
+            home_location.setText(temp);
+
+            homeImg.setImageResource((R.drawable.open1));   // light up the house
+            clear_home.setVisibility(View.VISIBLE);
+        }
+        else
+        {
+            hone_Title.setText("");
+            home_location.setText("");
+            clear_home.setVisibility(View.INVISIBLE);
+        }
+    }
 
 
     public void rotateAnimation ()
