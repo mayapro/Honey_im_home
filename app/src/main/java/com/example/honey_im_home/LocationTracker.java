@@ -8,18 +8,13 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
-//import android.view.animation.Animation;
-//import android.view.animation.AnimationUtils;
+
 
 import androidx.core.app.ActivityCompat;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 public class LocationTracker implements LocationListener {
     static final String STARTED = "com.example.im_home.started";
@@ -27,12 +22,12 @@ public class LocationTracker implements LocationListener {
     static final String UPDATED = "com.example.im_home.updated";
     static final String LOCATION_INFO = "info";
     // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0; // 10 meters
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0; // 00 meters
     // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 0; // 1 minute
+    private static final long MIN_TIME_BW_UPDATES = 0; // 0 minute
 
-    private LocationManager locationManager;
     protected LocationListener locationListener;
+    private LocationManager locationManager;
     private Context myContex;
 
     private LocationInfo myLocationData;
@@ -48,7 +43,6 @@ public class LocationTracker implements LocationListener {
 
 
     public void startTracking() {
-        locationManager = (LocationManager) myContex.getSystemService(Context.LOCATION_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(myContex,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -57,10 +51,12 @@ public class LocationTracker implements LocationListener {
             Log.d ("this is a problem", "you didnt get premission");
             return;
         }
+        locationManager = (LocationManager) myContex.getSystemService(Context.LOCATION_SERVICE);
+        assert locationManager != null;
+
         locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                this);
-        assert locationManager != null;
+                this, Looper.getMainLooper());
 
         startBroadcast(STARTED, null);
         stop_tracking = true;
@@ -88,7 +84,7 @@ public class LocationTracker implements LocationListener {
 
         // i should check?
         if ((myLocationData.getLatitude() != location.getLatitude()) &&
-                (myLocationData.getLongitude() != location.getLongitude()) &&
+                (myLocationData.getLongitude() != location.getLongitude()) ||
                 (myLocationData.getAccuracy() != location.getAccuracy()))
         {
             myLocationData.newLocationInfo(location.getLatitude(), location.getLongitude(),
@@ -124,4 +120,6 @@ public class LocationTracker implements LocationListener {
     {
         return myLocationData;
     }
+
+
 }
