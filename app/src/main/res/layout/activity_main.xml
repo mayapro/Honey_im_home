@@ -75,15 +75,26 @@
         android:layout_below="@id/home_lat_and_long"
         android:src="@drawable/close1" />
 
-<!--    <Button-->
-<!--        android:id="@+id/test_day"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_centerHorizontal="true"-->
-<!--        android:background = "#003C3F41"-->
-<!--        android:layout_above="@id/set_location_at_home"-->
-<!--        android:textSize="15sp"-->
-<!--        android:text="day or night" />-->
+    <Button
+        android:id="@+id/set_sms_phone_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:background = "#003C3F41"
+        android:layout_below="@+id/closeH"
+        android:textSize="15sp"
+        android:text="set phone number" />
+
+
+    <Button
+        android:id="@+id/test_sms"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:background = "#003C3F41"
+        android:layout_below="@+id/set_sms_phone_number"
+        android:textSize="12sp"
+        android:text="@string/test_sms" />
 
     <Button
         android:id="@+id/set_location_at_home"

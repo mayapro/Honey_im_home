@@ -5,14 +5,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.PermissionChecker;
 import androidx.core.app.ActivityCompat;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 
 import android.Manifest;
 
 import android.annotation.SuppressLint;
 
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -20,9 +24,12 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 
 import android.view.animation.Animation;
@@ -37,10 +44,13 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.Calendar;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     private static final int STORAGE_PERMISSION_CODE = 1;
+    public static final int SMS_PERMISSION_CODE = 2;
     public static final String SEND_SMS = "POST_PC.ACTION_SEND_SMS";
+    public static final String MSG_SMS = "Honey I'm Sending a Test Message!";
 
     Animation rotateAnimation;
     ImageView earthImg;
@@ -54,6 +64,10 @@ public class MainActivity extends AppCompatActivity {
     Button click_me;
     Button clear_home;
     Button set_home_loct;
+    Button set_phone_number;
+    Button test_sms;
+
+    String newPhoneNumber;
 
     boolean stop_tracking;
 
@@ -84,6 +98,15 @@ public class MainActivity extends AppCompatActivity {
         createButtons();
         set_home_loct.setVisibility(View.INVISIBLE);
 
+        if (!newPhoneNumber.equals(""))
+        {
+            test_sms.setVisibility(View.VISIBLE);
+        }
+        else
+        {
+            test_sms.setVisibility(View.INVISIBLE);
+        }
+
         if (savedInstanceState != null)
         {
             loadLocationLock();
@@ -92,6 +115,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setMyReceiver();
+        repeatedWork();
+    }
+
+
+    public void repeatedWork()
+    {
+        PeriodicWorkRequest work = new PeriodicWorkRequest.Builder(ClassExtendingWorker.class, 15,
+                TimeUnit.MINUTES).build();
+        WorkManager.getInstance(this).enqueue(work);
     }
 
 
@@ -100,6 +132,8 @@ public class MainActivity extends AppCompatActivity {
         click_me = findViewById(R.id.click_me);
         clear_home = findViewById(R.id.clear_home);
         set_home_loct = findViewById(R.id.set_location_at_home);
+        set_phone_number = findViewById(R.id.set_sms_phone_number);
+        test_sms = findViewById(R.id.test_sms);
 
         earthImg = findViewById(R.id.earthImg);
         homeImg = findViewById(R.id.closeH);
@@ -116,14 +150,26 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == STORAGE_PERMISSION_CODE)  {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Permission GRANTED", Toast.LENGTH_SHORT).show();
-                uiUpdate();
-//                locateFunc(); // if we can locate - we start
+                Toast.makeText(this, "location Permission GRANTED", Toast.LENGTH_SHORT).show();
+                locationTracker.startTracking();
             } else {
-                Toast.makeText(this, "Permission DENIED", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "location Permission DENIED", Toast.LENGTH_LONG).show();
+            }
+        }
+        if (requestCode == SMS_PERMISSION_CODE)
+        {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            {
+                Toast.makeText(this, "SNS Permission GRANTED", Toast.LENGTH_SHORT).show();
+                updatePhoneNumSP();
+            }
+            else
+            {
+                Toast.makeText(this, "i need your number so i could operate", Toast.LENGTH_LONG).show();
             }
         }
     }
+
 
     @Override
     protected void onDestroy() {
@@ -169,20 +215,76 @@ public class MainActivity extends AppCompatActivity {
         clear_home.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
-                SharedPreferences.Editor editor = sp.edit();
-                editor.clear();
-                editor.apply();
+                clearhome();
+            }
+        });
 
-                hone_Title.setText("");
-                home_location.setText("");
+        set_phone_number.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ContextCompat.checkSelfPermission
+                        (MainActivity.this, Manifest.permission.SEND_SMS) !=
+                        PermissionChecker.PERMISSION_GRANTED)
+                {
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.SEND_SMS}, SMS_PERMISSION_CODE);
+                }
+                insertPhone();
+            }
+        });
 
-                clear_home.setVisibility(View.INVISIBLE);
-                homeImg.setImageResource((R.drawable.close1));   // light up the house
+        test_sms.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendSMS();
             }
         });
     }
 
+
+
+    public void insertPhone ()
+    {
+        final EditText taskEditText = new EditText(this);
+        if (!newPhoneNumber.equals(""))
+        {
+            taskEditText.setText(newPhoneNumber);
+        }
+        taskEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("phone number")
+                .setMessage("please insert your phone number now")
+                .setView(taskEditText)
+                .setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        newPhoneNumber = String.valueOf(taskEditText.getText());
+                        //insert to sp:
+                        updatePhoneNumSP();
+                        if (!newPhoneNumber.equals(""))
+                        {
+                            test_sms.setVisibility(View.VISIBLE);
+                        }
+                        else
+                        {
+                            test_sms.setVisibility(View.INVISIBLE);
+                        }
+                    }
+                })
+                .create();
+        dialog.show();
+    }
+
+
+    public void sendSMS()
+    {
+        Intent intent = new Intent();
+        intent.putExtra(LocalSendSmsBroadcastReceiver.PHONE, newPhoneNumber);
+        intent.putExtra(LocalSendSmsBroadcastReceiver.CONTENT, MSG_SMS);
+        intent.setAction(SEND_SMS);
+        sendBroadcast(intent);
+    }
 
     public void uiUpdate()
     {
@@ -259,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
     private void saveHome()
     {
         myHomeData = myLocationData;
-        sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
+        sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
         SharedPreferences.Editor editor = sp.edit();
 
         Gson gson = new Gson();
@@ -269,9 +371,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void clearhome()
+    {
+        sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+        SharedPreferences.Editor editor = sp.edit();
+        editor.clear();
+        editor.apply();
+
+        hone_Title.setText("");
+        home_location.setText("");
+
+        clear_home.setVisibility(View.INVISIBLE);
+        homeImg.setImageResource((R.drawable.close1));
+    }
+
+
     private void regularLocation()
     {
-        sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
+        sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
         SharedPreferences.Editor editor = sp.edit();
 
         Gson gson = new Gson();
@@ -284,7 +401,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadHomeLock ()
     {
-        sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
+        sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+
+        // getting the phone number from sp
+        newPhoneNumber = sp.getString("phone number", "");
 
         Gson gson = new Gson();
         String json = sp.getString("home location data", "");
@@ -318,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadLocationLock ()
     {
-        sp = getSharedPreferences("shared preferences", MODE_PRIVATE);
+        sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
 
         Gson gson = new Gson();
         String json = sp.getString("location data", "");
@@ -331,6 +451,16 @@ public class MainActivity extends AppCompatActivity {
             myLocationData = tempLoc;
             mySetLocation();
         }
+    }
+
+
+    private void updatePhoneNumSP()
+    {
+        sp = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+        SharedPreferences.Editor editor = sp.edit();
+
+        editor.putString("phone number", newPhoneNumber);
+        editor.apply();
     }
 
 
@@ -360,6 +490,9 @@ public class MainActivity extends AppCompatActivity {
 
             hone_Title.setTextColor(Color.WHITE);
             home_location.setTextColor(Color.WHITE);
+
+            set_phone_number.setTextColor(Color.WHITE);
+            test_sms.setTextColor(Color.WHITE);
         }
     }
 

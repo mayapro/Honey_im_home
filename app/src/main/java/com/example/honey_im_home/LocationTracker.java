@@ -120,4 +120,8 @@ public class LocationTracker implements LocationListener {
         return stop_tracking;
     }
 
+    public LocationInfo getLocationInfo()
+    {
+        return myLocationData;
+    }
 }
