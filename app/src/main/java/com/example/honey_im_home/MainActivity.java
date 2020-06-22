@@ -30,11 +30,6 @@ import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -59,11 +54,6 @@ public class MainActivity extends AppCompatActivity {
     Button set_home_loct;
 
     boolean stop_tracking;
-//    private Location myLocation;
-
-//    private LocationRequest locationRequest;
-//    private LocationCallback locationCallback;
-//    private FusedLocationProviderClient client;
 
     private LocationInfo myLocationData;
     private LocationInfo myHomeData;
@@ -78,12 +68,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        startDisplay();
-        isItNight();
-
         myLocationData = new LocationInfo();
         myHomeData = new LocationInfo();
         locationTracker = new LocationTracker(this);
+        startDisplay();
+        isItNight();
 
         if (myLocationData != null)
         {
@@ -93,11 +82,8 @@ public class MainActivity extends AppCompatActivity {
         createButtons();
         set_home_loct.setVisibility(View.INVISIBLE);
 
-
         if (savedInstanceState != null)
         {
-//            stop_tracking = savedInstanceState.getBoolean("stop_tracking");
-//            myLocation = (Location) savedInstanceState.getParcelable("myLocation");
             loadLocationLock();
             uiUpdate();
             mySetLocation();
@@ -377,9 +363,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-
-//        outState.putParcelable("myLocation", myHomeData);
-//        outState.putBoolean("stop_tracking", stop_tracking);
 
     }
 }
