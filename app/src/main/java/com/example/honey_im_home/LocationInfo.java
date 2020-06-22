@@ -8,7 +8,7 @@ public class LocationInfo implements Serializable
    // latitude, langitude and accuracy.
 
     private double latitude;
-    private double langitude;
+    private double longitude;
     private float accuracy;
 
 
@@ -16,7 +16,7 @@ public class LocationInfo implements Serializable
     public void newLocationInfo (double lat, double lang, float acc)
     {
         latitude = lat;
-        langitude = lang;
+        longitude = lang;
         accuracy = acc;
     }
 
@@ -25,8 +25,8 @@ public class LocationInfo implements Serializable
          return latitude;
      }
 
-    public double getLangitude() {
-        return langitude;
+    public double getLongitude() {
+        return longitude;
     }
 
     public float getAccuracy() {
