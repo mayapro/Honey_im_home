@@ -40,6 +40,8 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private static final int STORAGE_PERMISSION_CODE = 1;
+    public static final String SEND_SMS = "POST_PC.ACTION_SEND_SMS";
+
     Animation rotateAnimation;
     ImageView earthImg;
     ImageView homeImg;
@@ -115,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == STORAGE_PERMISSION_CODE)  {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Permission GRANTED", Toast.LENGTH_SHORT).show();
+                uiUpdate();
 //                locateFunc(); // if we can locate - we start
             } else {
                 Toast.makeText(this, "Permission DENIED", Toast.LENGTH_SHORT).show();
